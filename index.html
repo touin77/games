@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GOGO ROROのモグラ叩きゲーム</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: linear-gradient(135deg, #f6f8fa, #e2e8f0);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 30px 15px;
+    color: #333;
+  }
+  h1 {
+    font-weight: 700;
+    font-size: 2.8rem;
+    color: #344055;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  #mode-select {
+    margin-bottom: 25px;
+  }
+  #mode-select button {
+    background: #4a90e2;
+    border: none;
+    color: white;
+    padding: 12px 26px;
+    margin: 0 10px 15px 10px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 6px 10px rgba(74,144,226,0.4);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  #mode-select button:hover, #mode-select button:focus {
+    background: #357ABD;
+    box-shadow: 0 8px 14px rgba(53,122,189,0.6);
+    outline: none;
+  }
+  #mode-select button.active {
+    background: #2c5aa0;
+    box-shadow: 0 10px 20px rgba(44,90,160,0.7);
+  }
+
+  #start-button {
+    background: #f76c6c;
+    border: none;
+    color: white;
+    padding: 14px 40px;
+    font-size: 20px;
+    font-weight: 700;
+    border-radius: 40px;
+    cursor: pointer;
+    box-shadow: 0 8px 15px rgba(247,108,108,0.5);
+    margin-bottom: 30px;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  #start-button:hover, #start-button:focus {
+    background: #d95353;
+    box-shadow: 0 10px 20px rgba(217,83,83,0.7);
+    outline: none;
+  }
+
+  #timer, #score {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 10px 0 5px 0;
+    color: #222f3e;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  }
+
+  #game {
+    margin: 0 auto 25px auto;
+    width: 360px;
+    height: 360px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 14px;
+    background: #f0f4f8;
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  }
+
+  .hole {
+    background: #7f8c94;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: inset 0 5px 10px rgba(255,255,255,0.25),
+                inset 0 -3px 8px rgba(0,0,0,0.3);
+    transition: background 0.3s ease;
+  }
+  .hole:hover {
+    background: #9eaec7;
+  }
+
+  .mole {
+    width: 80%;
+    height: 80%;
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    cursor: pointer;
+    user-select: none;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+    transition: transform 0.15s ease;
+  }
+  .mole:active {
+    transform: scale(0.85);
+  }
+
+  #message {
+    font-size: 36px;
+    color: #e74c3c;
+    font-weight: 700;
+    margin-top: 15px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+  }
+
+  /* Responsive for small screens */
+  @media (max-width: 400px) {
+    #game {
+      width: 300px;
+      height: 300px;
+      grid-gap: 10px;
+    }
+    #mode-select button {
+      margin: 5px 6px 15px 6px;
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+    #start-button {
+      padding: 12px 32px;
+      font-size: 18px;
+    }
+    #timer, #score {
+      font-size: 22px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>Gaiのモグラ叩き</h1>
+
+<div id="mode-select">
+  <button data-speed="1000" class="active">ノーマルスピード</button>
+  <button data-speed="600">極スピード</button>
+  <button data-speed="300">絶スピード</button>
+</div>
+
+<button id="start-button">ゲーム開始</button>
+
+<div id="timer">残り時間: 30秒</div>
+<div id="score">スコア: 0</div>
+
+<div id="game">
+  <!-- 9つの穴はJSで作成 -->
+</div>
+
+<div id="message"></div>
+
+<script>
+(() => {
+  const game = document.getElementById('game');
+  const scoreDisplay = document.getElementById('score');
+  const timerDisplay = document.getElementById('timer');
+  const messageDisplay = document.getElementById('message');
+  const modeButtons = document.querySelectorAll('#mode-select button');
+  const startButton = document.getElementById('start-button');
+
+  let score = 0;
+  let activeHole = -1;
+  let moleTimeout = null;
+  let moleSpeed = 1000;
+  let timeLeft = 30;
+  let timerInterval = null;
+  let gameActive = false;
+
+  const moleImgUrl = 'https://cdn-icons-png.flaticon.com/512/616/616408.png';
+
+  // 9つの穴を作成
+  for(let i=0; i<9; i++) {
+    const hole = document.createElement('div');
+    hole.classList.add('hole');
+    hole.dataset.index = i;
+    game.appendChild(hole);
+  }
+
+  function startTimer() {
+    timeLeft = 30;
+    timerDisplay.textContent = `残り時間: ${timeLeft}秒`;
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerDisplay.textContent = `残り時間: ${timeLeft}秒`;
+      if(timeLeft <= 0) {
+        clearInterval(timerInterval);
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function showMole() {
+    if(!gameActive) return;
+    if(activeHole >= 0) {
+      const prevHole = game.children[activeHole];
+      prevHole.innerHTML = '';
+    }
+    activeHole = Math.floor(Math.random()*9);
+    const hole = game.children[activeHole];
+    const mole = document.createElement('img');
+    mole.classList.add('mole');
+    mole.src = moleImgUrl;
+    mole.alt = 'モグラ';
+    hole.appendChild(mole);
+
+    moleTimeout = setTimeout(showMole, moleSpeed);
+  }
+
+  game.addEventListener('click', e => {
+    if(!gameActive) return;
+    if(e.target.classList.contains('mole')) {
+      score++;
+      scoreDisplay.textContent = `スコア: ${score}`;
+      const parentHole = e.target.parentElement;
+      parentHole.innerHTML = '';
+      clearTimeout(moleTimeout);
+      showMole();
+    }
+  });
+
+  modeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      moleSpeed = Number(btn.dataset.speed);
+      modeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if(!gameActive) {
+        timeLeft = 30;
+        timerDisplay.textContent = `残り時間: ${timeLeft}秒`;
+      }
+    });
+  });
+
+  function resetGame() {
+    score = 0;
+    scoreDisplay.textContent = `スコア: ${score}`;
+    messageDisplay.textContent = '';
+    clearTimeout(moleTimeout);
+    clearInterval(timerInterval);
+    for(let hole of game.children) {
+      hole.innerHTML = '';
+    }
+    activeHole = -1;
+    gameActive = true;
+    showMole();
+    startTimer();
+  }
+
+  function endGame() {
+    gameActive = false;
+    clearTimeout(moleTimeout);
+    for(let hole of game.children) {
+      hole.innerHTML = '';
+    }
+    messageDisplay.textContent = 'ゲーム終了！';
+  }
+
+  startButton.addEventListener('click', () => {
+    resetGame();
+  });
+
+  timerDisplay.textContent = `残り時間: 30秒`;
+  scoreDisplay.textContent = `スコア: 0`;
+  messageDisplay.textContent = '';
+
+})();
+</script>
+
+</body>
+</html>
