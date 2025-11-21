@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ジャンプ避けゲーム（美化版）</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden;
+    background: linear-gradient(to top, #87ceeb, #cce0ff);
+  }
+
+  #gameArea {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    height: 300px;
+    margin: 20px auto;
+    overflow: hidden;
+    border-radius: 15px;
+    border: 3px solid #222;
+    background: linear-gradient(to bottom, #6b8e23 0%, #4d7038 100%);
+  }
+
+  /* 背景スクロール用 */
+  #background {
+    position: absolute;
+    width: 200%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: repeating-linear-gradient(
+      to right,
+      #4d7038 0px,
+      #4d7038 50px,
+      #6b8e23 50px,
+      #6b8e23 100px
+    );
+    animation: bgScroll 5s linear infinite;
+    z-index: 0;
+  }
+
+  @keyframes bgScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  #player {
+    position: absolute;
+    bottom: 0;
+    left: 50px;
+    width: 50px;
+    height: 50px;
+    background: red;
+    border-radius: 12px;
+    z-index: 1;
+  }
+
+  .obstacle {
+    position: absolute;
+    bottom: 0;
+    background: black;
+    border-radius: 5px;
+    z-index: 1;
+  }
+
+  #score {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 22px;
+    color: #fff;
+    text-shadow: 1px 1px 3px #000;
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+
+<div id="gameArea">
+  <div id="background"></div>
+  <div id="player"></div>
+  <div id="score">スコア: 0</div>
+</div>
+
+<script>
+const player = document.getElementById('player');
+const gameArea = document.getElementById('gameArea');
+const scoreDisplay = document.getElementById('score');
+
+let isJumping = false;
+let position = 0;
+let score = 0;
+let obstacles = [];
+
+function jump() {
+  if (isJumping) return;
+  isJumping = true;
+  let upInterval = setInterval(() => {
+    if (position >= 150) {
+      clearInterval(upInterval);
+      let downInterval = setInterval(() => {
+        if (position <= 0) {
+          clearInterval(downInterval);
+          isJumping = false;
+        } else {
+          position -= 10;
+          player.style.bottom = position + 'px';
+        }
+      }, 20);
+    } else {
+      position += 10;
+      player.style.bottom = position + 'px';
+    }
+  }, 20);
+}
+
+// キーボードジャンプ
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') jump();
+});
+
+// スマホ対応タップジャンプ
+gameArea.addEventListener('touchstart', jump);
+
+function createObstacle() {
+  const obstacle = document.createElement('div');
+  obstacle.classList.add('obstacle');
+
+  // 高さ・幅ランダム
+  const width = Math.floor(Math.random() * 30) + 20;
+  const height = Math.floor(Math.random() * 50) + 30;
+  obstacle.style.width = width + 'px';
+  obstacle.style.height = height + 'px';
+
+  obstacle.style.left = gameArea.offsetWidth + 'px';
+  obstacle.style.bottom = '0px';
+
+  gameArea.appendChild(obstacle);
+  obstacles.push(obstacle);
+
+  let moveInterval = setInterval(() => {
+    let obstacleLeft = parseInt(obstacle.style.left);
+    if (obstacleLeft < -width) {
+      clearInterval(moveInterval);
+      gameArea.removeChild(obstacle);
+      obstacles.shift();
+      score++;
+      scoreDisplay.textContent = 'スコア: ' + score;
+    } else if (
+      obstacleLeft < 100 && obstacleLeft + width > 50 &&
+      position < height
+    ) {
+      alert('ゲームオーバー！スコア: ' + score);
+      location.reload();
+    } else {
+      obstacle.style.left = obstacleLeft - 5 + 'px';
+    }
+  }, 20);
+
+  // ランダムに次の障害物生成
+  const nextTime = Math.random() * 2000 + 1000;
+  setTimeout(createObstacle, nextTime);
+}
+
+// ゲームスタート
+createObstacle();
+</script>
+</body>
+</html>
