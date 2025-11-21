@@ -1,292 +1,251 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>GOGO ROROのモグラ叩きゲーム</title>
+<title>記憶翻牌遊戲 - 撲克牌美化版</title>
+
 <style>
-  /* Reset & base */
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    background: linear-gradient(135deg, #f6f8fa, #e2e8f0);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    text-align: center;
-    margin: 0;
-    padding: 30px 15px;
-    color: #333;
-  }
-  h1 {
-    font-weight: 700;
-    font-size: 2.8rem;
-    color: #344055;
-    margin-bottom: 20px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #a0d8ff 0%, #d6f1ff 100%);
+  padding: 20px;
+}
 
-  #mode-select {
-    margin-bottom: 25px;
-  }
-  #mode-select button {
-    background: #4a90e2;
-    border: none;
-    color: white;
-    padding: 12px 26px;
-    margin: 0 10px 15px 10px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 30px;
-    cursor: pointer;
-    box-shadow: 0 6px 10px rgba(74,144,226,0.4);
-    transition: background 0.3s ease, box-shadow 0.3s ease;
-  }
-  #mode-select button:hover, #mode-select button:focus {
-    background: #357ABD;
-    box-shadow: 0 8px 14px rgba(53,122,189,0.6);
-    outline: none;
-  }
-  #mode-select button.active {
-    background: #2c5aa0;
-    box-shadow: 0 10px 20px rgba(44,90,160,0.7);
-  }
+h2 {
+  margin-bottom: 10px;
+  font-size: 28px;
+  color: #055c9d;
+  letter-spacing: 1px;
+}
 
-  #start-button {
-    background: #f76c6c;
-    border: none;
-    color: white;
-    padding: 14px 40px;
-    font-size: 20px;
-    font-weight: 700;
-    border-radius: 40px;
-    cursor: pointer;
-    box-shadow: 0 8px 15px rgba(247,108,108,0.5);
-    margin-bottom: 30px;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
-  }
-  #start-button:hover, #start-button:focus {
-    background: #d95353;
-    box-shadow: 0 10px 20px rgba(217,83,83,0.7);
-    outline: none;
-  }
+#timer {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #003f6b;
+}
 
-  #timer, #score {
-    font-size: 28px;
-    font-weight: 700;
-    margin: 10px 0 5px 0;
-    color: #222f3e;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-  }
+.game {
+  width: 720px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
 
-  #game {
-    margin: 0 auto 25px auto;
-    width: 360px;
-    height: 360px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 14px;
-    background: #f0f4f8;
-    padding: 20px;
-    border-radius: 25px;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-  }
+.card {
+  width: 105px;
+  height: 150px;
+  perspective: 1000px;
+  cursor: pointer;
+}
 
-  .hole {
-    background: #7f8c94;
-    border-radius: 50%;
-    position: relative;
-    cursor: pointer;
-    user-select: none;
-    box-shadow: inset 0 5px 10px rgba(255,255,255,0.25),
-                inset 0 -3px 8px rgba(0,0,0,0.3);
-    transition: background 0.3s ease;
-  }
-  .hole:hover {
-    background: #9eaec7;
-  }
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.65s ease;
+}
 
-  .mole {
-    width: 80%;
-    height: 80%;
-    position: absolute;
-    top: 10%;
-    left: 10%;
-    cursor: pointer;
-    user-select: none;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
-    transition: transform 0.15s ease;
-  }
-  .mole:active {
-    transform: scale(0.85);
-  }
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
 
-  #message {
-    font-size: 36px;
-    color: #e74c3c;
-    font-weight: 700;
-    margin-top: 15px;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-  }
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
 
-  /* Responsive for small screens */
-  @media (max-width: 400px) {
-    #game {
-      width: 300px;
-      height: 300px;
-      grid-gap: 10px;
-    }
-    #mode-select button {
-      margin: 5px 6px 15px 6px;
-      padding: 10px 20px;
-      font-size: 14px;
-    }
-    #start-button {
-      padding: 12px 32px;
-      font-size: 18px;
-    }
-    #timer, #score {
-      font-size: 22px;
-    }
-  }
+.front {
+  background: #fff;
+  transform: rotateY(180deg);
+}
+
+.back {
+  background: url('https://deckofcardsapi.com/static/img/back.png');
+  background-size: cover;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+/* 完成視窗 */
+#modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
+}
+
+#modal-content {
+  background: #fff;
+  padding: 25px 35px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+
+#modal-content h3 {
+  margin: 0 0 15px;
+  font-size: 26px;
+  color: #055c9d;
+}
+
+#modal-content p {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+#resetBtn {
+  padding: 10px 20px;
+  background: #1c8adb;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+}
+#resetBtn:hover {
+  background: #0f6cb0;
+}
 </style>
 </head>
 <body>
 
-<h1>GOGOのモグラ叩き</h1>
+<h2>🃏 GOGO神経衰弱（24 枚 カード）</h2>
+<div id="timer">経過時間：0 秒</div>
 
-<div id="mode-select">
-  <button data-speed="1000" class="active">ノーマルスピード</button>
-  <button data-speed="600">極スピード</button>
-  <button data-speed="300">絶スピード</button>
+<div class="game" id="game"></div>
+
+<!-- 完成彈窗 -->
+<div id="modal">
+  <div id="modal-content">
+    <h3>🎉 完成！</h3>
+    <p id="result"></p>
+    <button id="resetBtn" onclick="location.reload()">再玩一次</button>
+  </div>
 </div>
-
-<button id="start-button">ゲーム開始</button>
-
-<div id="timer">残り時間: 30秒</div>
-<div id="score">スコア: 0</div>
-
-<div id="game">
-  <!-- 9つの穴はJSで作成 -->
-</div>
-
-<div id="message"></div>
 
 <script>
-(() => {
-  const game = document.getElementById('game');
-  const scoreDisplay = document.getElementById('score');
-  const timerDisplay = document.getElementById('timer');
-  const messageDisplay = document.getElementById('message');
-  const modeButtons = document.querySelectorAll('#mode-select button');
-  const startButton = document.getElementById('start-button');
+const deck = [
+  "AS","AH","AD","AC",
+  "2S","2H","2D","2C",
+  "3S","3H","3D","3C"
+];
 
-  let score = 0;
-  let activeHole = -1;
-  let moleTimeout = null;
-  let moleSpeed = 1000;
-  let timeLeft = 30;
-  let timerInterval = null;
-  let gameActive = false;
+let items = [];
+deck.forEach(code => items.push(code, code));
+items.sort(() => Math.random() - 0.5);
 
-  const moleImgUrl = 'https://cdn-icons-png.flaticon.com/512/616/616408.png';
+const game = document.getElementById("game");
 
-  // 9つの穴を作成
-  for(let i=0; i<9; i++) {
-    const hole = document.createElement('div');
-    hole.classList.add('hole');
-    hole.dataset.index = i;
-    game.appendChild(hole);
-  }
+let first = null;
+let lock = false;
+let timerInterval = null;
+let seconds = 0;
+let flippedCount = 0;
+const timerElement = document.getElementById("timer");
 
-  function startTimer() {
-    timeLeft = 30;
-    timerDisplay.textContent = `残り時間: ${timeLeft}秒`;
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      timerDisplay.textContent = `残り時間: ${timeLeft}秒`;
-      if(timeLeft <= 0) {
-        clearInterval(timerInterval);
-        endGame();
-      }
-    }, 1000);
-  }
+// 計時器
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    seconds++;
+    timerElement.textContent = `時間：${seconds} 秒`;
+  }, 1000);
+}
 
-  function showMole() {
-    if(!gameActive) return;
-    if(activeHole >= 0) {
-      const prevHole = game.children[activeHole];
-      prevHole.innerHTML = '';
+// 建立卡片 DOM
+items.forEach(code => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.dataset.value = code;
+
+  const inner = document.createElement("div");
+  inner.className = "card-inner";
+
+  const back = document.createElement("div");
+  back.className = "card-face back";
+
+  const front = document.createElement("div");
+  front.className = "card-face front";
+  const img = document.createElement("img");
+  img.src = `https://deckofcardsapi.com/static/img/${code}.png`;
+  img.style.width = "100%";
+  img.style.height = "100%";
+  front.appendChild(img);
+
+  inner.appendChild(back);
+  inner.appendChild(front);
+  card.appendChild(inner);
+
+  card.onclick = () => flipCard(card);
+  game.appendChild(card);
+});
+
+// 翻牌邏輯
+function flipCard(card) {
+  if (lock || card.classList.contains("flipped") || card.classList.contains("hidden"))
+    return;
+
+  if (flippedCount === 0) startTimer();
+
+  card.classList.add("flipped");
+
+  if (!first) {
+    first = card;
+  } else {
+    lock = true;
+    const second = card;
+
+    if (first.dataset.value === second.dataset.value) {
+      setTimeout(() => {
+        first.classList.add("hidden");
+        second.classList.add("hidden");
+        resetTurn();
+      }, 450);
+    } else {
+      setTimeout(() => {
+        first.classList.remove("flipped");
+        second.classList.remove("flipped");
+        resetTurn();
+      }, 900);
     }
-    activeHole = Math.floor(Math.random()*9);
-    const hole = game.children[activeHole];
-    const mole = document.createElement('img');
-    mole.classList.add('mole');
-    mole.src = moleImgUrl;
-    mole.alt = 'モグラ';
-    hole.appendChild(mole);
-
-    moleTimeout = setTimeout(showMole, moleSpeed);
   }
 
-  game.addEventListener('click', e => {
-    if(!gameActive) return;
-    if(e.target.classList.contains('mole')) {
-      score++;
-      scoreDisplay.textContent = `スコア: ${score}`;
-      const parentHole = e.target.parentElement;
-      parentHole.innerHTML = '';
-      clearTimeout(moleTimeout);
-      showMole();
-    }
-  });
+  flippedCount++;
+}
 
-  modeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      moleSpeed = Number(btn.dataset.speed);
-      modeButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if(!gameActive) {
-        timeLeft = 30;
-        timerDisplay.textContent = `残り時間: ${timeLeft}秒`;
-      }
-    });
-  });
+function resetTurn() {
+  first = null;
+  lock = false;
 
-  function resetGame() {
-    score = 0;
-    scoreDisplay.textContent = `スコア: ${score}`;
-    messageDisplay.textContent = '';
-    clearTimeout(moleTimeout);
+  // 是否全部完成？
+  const remaining = document.querySelectorAll(".card:not(.hidden)").length;
+  if (remaining === 0) {
     clearInterval(timerInterval);
-    for(let hole of game.children) {
-      hole.innerHTML = '';
-    }
-    activeHole = -1;
-    gameActive = true;
-    showMole();
-    startTimer();
+    showResult();
   }
+}
 
-  function endGame() {
-    gameActive = false;
-    clearTimeout(moleTimeout);
-    for(let hole of game.children) {
-      hole.innerHTML = '';
-    }
-    messageDisplay.textContent = 'ゲーム終了！';
-  }
-
-  startButton.addEventListener('click', () => {
-    resetGame();
-  });
-
-  timerDisplay.textContent = `残り時間: 30秒`;
-  scoreDisplay.textContent = `スコア: 0`;
-  messageDisplay.textContent = '';
-
-})();
+// 完成彈窗
+function showResult() {
+  document.getElementById("result").textContent = `你的完成時間：${seconds} 秒！`;
+  document.getElementById("modal").style.display = "flex";
+}
 </script>
 
 </body>
-
 </html>
