@@ -132,9 +132,9 @@ h2 {
 <!-- 完成彈窗 -->
 <div id="modal">
   <div id="modal-content">
-    <h3>🎉 完成！</h3>
+    <h3>🎉 クリア！</h3>
     <p id="result"></p>
-    <button id="resetBtn" onclick="location.reload()">再玩一次</button>
+    <button id="resetBtn" onclick="location.reload()">もう一度遊ぶ</button>
   </div>
 </div>
 
@@ -242,11 +242,12 @@ function resetTurn() {
 
 // 完成彈窗
 function showResult() {
-  document.getElementById("result").textContent = `你的完成時間：${seconds} 秒！`;
+  document.getElementById("result").textContent = `クリア時間：${seconds} 秒！`;
   document.getElementById("modal").style.display = "flex";
 }
 </script>
 
 </body>
 </html>
+
 
