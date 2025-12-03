@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>gogoror英単語クイズ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center; /* 全部中央揃え */
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0f172a;
+      color: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #020617;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(148,163,184,0.3);
+    }
+
+    button {
+      cursor: pointer;
+      border-radius: 12px;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 12px;
+      background: #22c55e;
+      color: #0f172a;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-weight: 600;
+      display: inline-block;
+      margin: 4px;
+    }
+
+    .time-badge {
+      border: 1px solid #ef4444;
+      color: #fecaca;
+    }
+
+    .score-badge {
+      border: 1px solid #22c55e;
+      color: #bbf7d0;
+    }
+
+    #choices button {
+      width: 90%;
+      margin: 8px auto;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 12px;
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid #64748b;
+    }
+
+    #choices button.correct {
+      background: #14532d;
+      border-color: #22c55e;
+    }
+
+    #choices button.wrong {
+      background: #7f1d1d;
+      border-color: #ef4444;
+    }
+
+    #choices button.disabled {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>英単語クイズ</h1>
+    <p>50秒でできるだけ多く正解しよう！</p>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+      <button id="start-btn">スタート</button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="hidden">
+      <div>
+        <span class="badge time-badge">⏱ 残り <span id="time-remaining">50</span> 秒</span>
+        <span class="badge score-badge">⭐ スコア <span id="score">0</span></span>
+      </div>
+
+      <h2 id="question-number"></h2>
+      <h1 id="question-text"></h1>
+      <div id="choices"></div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="hidden">
+      <h2>結果</h2>
+      <h1 id="final-score">0 点</h1>
+      <button id="restart-btn">もう一度チャレンジ</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      { question: "apple", choices: ["りんご", "バナナ", "ぶどう", "みかん"], answer: 0 },
+      { question: "book", choices: ["本", "ノート", "新聞", "えんぴつ"], answer: 0 },
+      { question: "teacher", choices: ["先生", "医者", "学生", "店員"], answer: 0 },
+      { question: "hospital", choices: ["病院", "駅", "学校", "公園"], answer: 0 },
+      { question: "difficult", choices: ["むずかしい", "やさしい", "楽しい", "ひまな"], answer: 0 },
+      { question: "sometimes", choices: ["ときどき", "いつも", "まったく", "すぐに"], answer: 0 },
+      { question: "quickly", choices: ["速く", "ゆっくり", "静かに", "きれいに"], answer: 0 },
+      { question: "weather", choices: ["天気", "気持ち", "時間", "季節"], answer: 0 },
+      { question: "neighbor", choices: ["近所の人", "先生", "同僚", "親戚"], answer: 0 },
+      { question: "dangerous", choices: ["危険な", "安全な", "便利な", "親切な"], answer: 0 },
+      { question: "comfortable", choices: ["快適な", "退屈な", "不便な", "冷たい"], answer: 0 },
+      { question: "museum", choices: ["博物館", "動物園", "映画館", "駅"], answer: 0 },
+      { question: "forget", choices: ["忘れる", "覚える", "探す", "聞く"], answer: 0 },
+      { question: "remember", choices: ["覚えている", "無視する", "捨てる", "眠る"], answer: 0 },
+      { question: "borrow", choices: ["借りる", "貸す", "買う", "売る"], answer: 0 },
+      { question: "factory", choices: ["工場", "農場", "港", "空港"], answer: 0 },
+      { question: "supermarket", choices: ["スーパー", "コンビニ", "市場", "デパート"], answer: 0 },
+      { question: "library", choices: ["図書館", "事務所", "授業", "教科書"], answer: 0 },
+      { question: "hometown", choices: ["故郷", "現住所", "職場", "旅行先"], answer: 0 },
+      { question: "conversation", choices: ["会話", "宿題", "約束", "計画"], answer: 0 },
+      { question: "important", choices: ["大切な", "安い", "きたない", "弱い"], answer: 0 },
+      { question: "hungry", choices: ["おなかがすいた", "眠い", "うれしい", "こわい"], answer: 0 },
+      { question: "thirsty", choices: ["のどがかわいた", "びしょぬれ", "ねむい", "寒い"], answer: 0 },
+      { question: "singer", choices: ["歌手", "作家", "画家", "料理人"], answer: 0 },
+      { question: "writer", choices: ["作家", "歌手", "運転手", "社長"], answer: 0 },
+      { question: "early", choices: ["早く", "遅く", "静かに", "強く"], answer: 0 },
+      { question: "late", choices: ["遅れて", "速く", "明るく", "簡単に"], answer: 0 },
+      { question: "always", choices: ["いつも", "たまに", "めったに", "一度も"], answer: 0 },
+      { question: "never", choices: ["決して〜ない", "少しだけ", "たまに", "たくさん"], answer: 0 },
+      { question: "excited", choices: ["わくわくした", "退屈した", "困った", "びっくりした"], answer: 0 }
+    ];
+
+    const startScreen = document.getElementById("start-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultScreen = document.getElementById("result-screen");
+
+    const startBtn = document.getElementById("start-btn");
+    const restartBtn = document.getElementById("restart-btn");
+
+    const timeRemainingEl = document.getElementById("time-remaining");
+    const scoreEl = document.getElementById("score");
+    const questionNumberEl = document.getElementById("question-number");
+    const questionTextEl = document.getElementById("question-text");
+    const choicesEl = document.getElementById("choices");
+    const finalScoreEl = document.getElementById("final-score");
+
+    let currentIndex = 0;
+    let score = 0;
+    let timeLeft = 50;
+    let timerId = null;
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function shuffleChoices(q) {
+      const originalChoices = q.choices.map((c, i) => ({text: c, index: i}));
+      shuffleArray(originalChoices);
+      return originalChoices;
+    }
+
+    function startQuiz() {
+      score = 0;
+      currentIndex = 0;
+      timeLeft = 50;
+
+      startScreen.classList.add("hidden");
+      quizScreen.classList.remove("hidden");
+      resultScreen.classList.add("hidden");
+
+      scoreEl.textContent = score;
+      timeRemainingEl.textContent = timeLeft;
+
+      shuffleArray(questions);
+      renderQuestion();
+      startTimer();
+    }
+
+    function startTimer() {
+      timerId = setInterval(() => {
+        timeLeft--;
+        timeRemainingEl.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          endQuiz();
+        }
+      }, 1000);
+    }
+
+    function renderQuestion() {
+      if (currentIndex >= questions.length) {
+        endQuiz();
+        return;
+      }
+
+      const q = questions[currentIndex];
+      const shuffled = shuffleChoices(q);
+
+      questionNumberEl.textContent = `第 ${currentIndex + 1} 問 / 全 ${questions.length}`;
+      questionTextEl.textContent = q.question;
+
+      choicesEl.innerHTML = "";
+      shuffled.forEach(item => {
+        const btn = document.createElement("button");
+        btn.textContent = item.text;
+        btn.addEventListener("click", () => handleAnswer(item.index, btn));
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(selectedIndex) {
+      const q = questions[currentIndex];
+      const buttons = choicesEl.querySelectorAll("button");
+
+      buttons.forEach(btn => btn.classList.add("disabled"));
+
+      buttons.forEach((btn, i) => {
+        const choiceText = btn.textContent;
+        if (choiceText === q.choices[q.answer]) {
+          btn.classList.add("correct");
+        } else if (q.choices[selectedIndex] === choiceText) {
+          btn.classList.add("wrong");
+        }
+      });
+
+      if (selectedIndex === q.answer) score++;
+      scoreEl.textContent = score;
+
+      setTimeout(() => {
+        currentIndex++;
+        renderQuestion();
+      }, 700);
+    }
+
+    function endQuiz() {
+      quizScreen.classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+
+      finalScoreEl.textContent = `${score} 点`;
+    }
+
+    startBtn.addEventListener("click", startQuiz);
+    restartBtn.addEventListener("click", startQuiz);
+  </script>
+</body>
+</html>
+
