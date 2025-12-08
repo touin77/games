@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>社員育成ゲーム - ＧＯＲＯ商事</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #e0f2ff 0, #f5f7ff 45%, #fdf6ec 100%);
+    }
+
+    .game {
+      width: 390px;
+      max-width: 95vw;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      padding: 18px 18px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .company-tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .money-line {
+      display: flex;
+      justify-content: flex-end;
+      font-size: 11px;
+      color: #0f172a;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .money-line span.label {
+      color: #6b7280;
+    }
+
+    .employee-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+      padding: 10px 10px;
+      border-radius: 18px;
+      background: linear-gradient(120deg, #e0f2fe, #eef2ff);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+    }
+
+    /* 社員アバター */
+    .avatar-wrapper {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      flex-shrink: 0;
+    }
+
+    .avatar-circle {
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease;
+    }
+
+    .stage-junior {
+      background: radial-gradient(circle at top, #bfdbfe, #60a5fa);
+    }
+    .stage-mid {
+      background: radial-gradient(circle at top, #a5b4fc, #6366f1);
+    }
+    .stage-leader {
+      background: radial-gradient(circle at top, #f9a8d4, #ec4899);
+    }
+    .stage-manager {
+      background: radial-gradient(circle at top, #fbbf24, #f97316);
+    }
+
+    .avatar-body {
+      width: 70%;
+      height: 80%;
+      background: #f1f5f9;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.18);
+    }
+
+    .head {
+      width: 52px;
+      height: 52px;
+      background: #fed7aa;
+      border-radius: 50%;
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+    }
+
+    .hair {
+      position: absolute;
+      width: 54px;
+      height: 28px;
+      background: #1f2937;
+      border-radius: 50px 50px 34px 34px;
+      top: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .eye {
+      width: 7px;
+      height: 7px;
+      background: #111827;
+      border-radius: 50%;
+      position: absolute;
+      top: 23px;
+    }
+
+    .eye.left {
+      left: 18px;
+    }
+    .eye.right {
+      right: 18px;
+    }
+
+    .eye.happy::after {
+      content: "";
+      position: absolute;
+      width: 7px;
+      height: 5px;
+      border-radius: 50%;
+      border-bottom: 2px solid #0f172a;
+      top: -1px;
+      left: 0;
+    }
+
+    .eye.tired::after {
+      content: "";
+      position: absolute;
+      width: 9px;
+      height: 2px;
+      border-radius: 999px;
+      background: #0f172a;
+      top: 2px;
+      left: -1px;
+    }
+
+    .mouth {
+      position: absolute;
+      width: 18px;
+      height: 10px;
+      border-radius: 0 0 16px 16px;
+      border-bottom: 2px solid #b91c1c;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .mouth.smile {
+      border-bottom-width: 3px;
+    }
+    .mouth.neutral {
+      border-bottom: none;
+      border-top: 2px solid #374151;
+      height: 4px;
+      bottom: 14px;
+    }
+    .mouth.sad {
+      border-radius: 16px 16px 0 0;
+      border-bottom: none;
+      border-top: 2px solid #b91c1c;
+      height: 8px;
+      bottom: 14px;
+    }
+
+    .suit {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 50%;
+      background: linear-gradient(135deg, #111827, #1f2933);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    .shirt {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 30px;
+      background: #f9fafb;
+      clip-path: polygon(0 0, 100% 0, 82% 100%, 18% 100%);
+    }
+
+    .tie {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 26px;
+      background: linear-gradient(180deg, #fb7185, #e11d48);
+      clip-path: polygon(50% 0, 90% 28%, 70% 100%, 30% 100%, 10% 28%);
+    }
+
+    .stage-pill {
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.7);
+      color: #e5e7eb;
+    }
+
+    .status-texts {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .name-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .year {
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .mood-label {
+      font-size: 12px;
+      color: #1f2933;
+    }
+
+    .hint-line {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .stats-card {
+      margin-top: 6px;
+      margin-bottom: 8px;
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 8px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .stat-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .stat-label {
+      width: 80px;
+      color: #475569;
+    }
+
+    .stat-bar {
+      flex: 1;
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-right: 6px;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.15);
+    }
+
+    .stat-fill {
+      height: 100%;
+      width: 50%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e, #facc15, #f97316);
+      transition: width 0.25s ease;
+    }
+
+    .stat-value {
+      width: 32px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #111827;
+    }
+
+    .actions {
+      margin-top: 4px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 6px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #e5f4ff, #dbeafe);
+      color: #1e293b;
+      box-shadow: 0 3px 0 rgba(148, 163, 184, 0.9);
+      transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn span.icon {
+      font-size: 16px;
+    }
+
+    .btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 rgba(148, 163, 184, 0.7);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #eef2ff;
+      box-shadow: 0 3px 0 #312e81;
+    }
+
+    .btn-warn {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #7f1d1d;
+      box-shadow: 0 3px 0 #b91c1c;
+    }
+
+    .career-actions {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .btn-small {
+      font-size: 11px;
+      padding: 6px 4px;
+      box-shadow: 0 2px 0 rgba(148, 163, 184, 0.9);
+    }
+
+    .btn-career {
+      background: linear-gradient(135deg, #fef3c7, #fee2e2);
+      color: #7c2d12;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .save-controls button {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      cursor: pointer;
+    }
+
+    .save-controls button:active {
+      transform: translateY(1px);
+    }
+
+    .auto-save-hint {
+      font-size: 10px;
+      color: #6b7280;
+      text-align: right;
+    }
+
+    .log {
+      margin-top: 6px;
+      font-size: 11px;
+      background: #fefce8;
+      border-radius: 11px;
+      padding: 6px 8px;
+      max-height: 90px;
+      overflow-y: auto;
+      border: 1px solid #facc15;
+    }
+
+    .log-line {
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* Ending modal */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      width: 85%;
+      max-width: 320px;
+      background: #f9fafb;
+      border-radius: 18px;
+      padding: 14px 16px 12px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      text-align: center;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .modal-sub {
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .modal-body {
+      font-size: 12px;
+      color: #4b5563;
+      margin-bottom: 10px;
+      text-align: left;
+      line-height: 1.5;
+    }
+
+    .modal-button {
+      margin-top: 4px;
+      border: none;
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-size: 13px;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #eef2ff;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #312e81;
+    }
+
+    .modal-tag {
+      font-size: 11px;
+      color: #ef4444;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <div class="header">
+      <div class="title">社員育成ゲーム</div>
+      <div id="company-name" class="company-tag">ＧＯＲＯ商事</div>
+    </div>
+
+    <div class="money-line">
+      <span class="label">所持金：</span>
+      <span id="money-text">¥50万</span>
+    </div>
+
+    <div class="employee-area">
+      <div class="avatar-wrapper">
+        <div id="avatar-bg" class="avatar-circle stage-junior">
+          <div class="avatar-body">
+            <div class="head">
+              <div class="hair"></div>
+              <div id="eye-left" class="eye left"></div>
+              <div id="eye-right" class="eye right"></div>
+              <div id="mouth" class="mouth neutral"></div>
+            </div>
+            <div class="suit"></div>
+            <div class="shirt"></div>
+            <div class="tie"></div>
+            <div id="stage-pill" class="stage-pill">新入社員</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-texts">
+        <div class="name-line">
+          <div class="name">社員：山田 太郎</div>
+          <div class="year" id="year-text">入社 0.0 年目</div>
+        </div>
+        <div class="mood-label" id="mood-label">気分：ふつう</div>
+        <div class="hint-line">
+          バランスよく働かせて、<b>メンタル</b>と<b>評価</b>と<b>お金</b>を守ろう。
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="stat-row">
+        <div class="stat-label">体力</div>
+        <div class="stat-bar">
+          <div id="energy-bar" class="stat-fill"></div>
+        </div>
+        <div id="energy-val" class="stat-value">80</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">メンタル</div>
+        <div class="stat-bar">
+          <div id="mental-bar" class="stat-fill"></div>
+        </div>
+        <div id="mental-val" class="stat-value">80</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">仕事の評価</div>
+        <div class="stat-bar">
+          <div id="performance-bar" class="stat-fill"></div>
+        </div>
+        <div id="performance-val" class="stat-value">70</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="work-btn">
+        <span class="icon">💻</span><span>集中して仕事</span>
+      </button>
+      <button class="btn" id="break-btn">
+        <span class="icon">☕</span><span>休憩・コーヒー</span>
+      </button>
+      <button class="btn" id="study-btn">
+        <span class="icon">📚</span><span>自己研修</span>
+      </button>
+      <button class="btn btn-warn" id="overtime-btn">
+        <span class="icon">🌙</span><span>残業する</span>
+      </button>
+    </div>
+
+    <div class="career-actions">
+      <button class="btn btn-small btn-career" id="transfer-btn">
+        🧳 転職する
+      </button>
+      <button class="btn btn-small btn-career" id="headhunt-btn">
+        📄 ヘッドハンティング
+      </button>
+      <button class="btn btn-small btn-career" id="dispatch-btn">
+        ✈ 日本分社へ出向
+      </button>
+    </div>
+
+    <div class="footer-row">
+      <div class="save-controls">
+        <button id="save-btn">💾 セーブ</button>
+        <button id="reset-btn">🗑 リセット</button>
+      </div>
+      <div class="auto-save-hint">※30秒ごとに自動セーブ＆定期的に給料日</div>
+    </div>
+
+    <div id="log" class="log"></div>
+
+    <!-- Ending Modal -->
+    <div id="ending-backdrop" class="modal-backdrop">
+      <div class="modal">
+        <div id="ending-tag" class="modal-tag">ENDING</div>
+        <div id="ending-title" class="modal-title">退社 END</div>
+        <div id="ending-sub" class="modal-sub">おつかれさまでした。</div>
+        <div id="ending-body" class="modal-body">
+          ここにエンディングの内容が入ります。
+        </div>
+        <button id="ending-restart" class="modal-button">最初からやり直す</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SAVE_KEY = "goro_salaryman_game_v2";
+
+    let state = {
+      energy: 80,        // 体力
+      mental: 80,        // メンタル
+      performance: 70,   // 仕事の評価
+      year: 0,           // 入社年数
+      money: 50,         // 所持金（万）
+      salaryBase: 25,    // 基本給（万 / 給料サイクル）
+      livingCost: 18,    // 生活費（万 / サイクル）
+      bonusRate: 0.3,    // ボーナス係数
+      companyName: "ＧＯＲＯ商事",
+      payrollProgress: 0, // 0.1 年ごとに給料日
+      lastSaved: Date.now()
+    };
+
+    let gameOver = false;
+    let tickTimer = null;
+    let autoSaveTimer = null;
+
+    // DOM
+    const energyBar = document.getElementById("energy-bar");
+    const mentalBar = document.getElementById("mental-bar");
+    const performanceBar = document.getElementById("performance-bar");
+    const energyVal = document.getElementById("energy-val");
+    const mentalVal = document.getElementById("mental-val");
+    const performanceVal = document.getElementById("performance-val");
+    const yearText = document.getElementById("year-text");
+    const moodLabel = document.getElementById("mood-label");
+    const logBox = document.getElementById("log");
+    const avatarBg = document.getElementById("avatar-bg");
+    const stagePill = document.getElementById("stage-pill");
+    const eyeLeft = document.getElementById("eye-left");
+    const eyeRight = document.getElementById("eye-right");
+    const mouth = document.getElementById("mouth");
+    const companyNameEl = document.getElementById("company-name");
+    const moneyText = document.getElementById("money-text");
+
+    const btnWork = document.getElementById("work-btn");
+    const btnBreak = document.getElementById("break-btn");
+    const btnStudy = document.getElementById("study-btn");
+    const btnOvertime = document.getElementById("overtime-btn");
+    const btnTransfer = document.getElementById("transfer-btn");
+    const btnHeadhunt = document.getElementById("headhunt-btn");
+    const btnDispatch = document.getElementById("dispatch-btn");
+    const btnSave = document.getElementById("save-btn");
+    const btnReset = document.getElementById("reset-btn");
+
+    const endingBackdrop = document.getElementById("ending-backdrop");
+    const endingTag = document.getElementById("ending-tag");
+    const endingTitle = document.getElementById("ending-title");
+    const endingSub = document.getElementById("ending-sub");
+    const endingBody = document.getElementById("ending-body");
+    const endingRestart = document.getElementById("ending-restart");
+
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function addLog(text) {
+      const line = document.createElement("p");
+      line.className = "log-line";
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      line.textContent = `[${hh}:${mm}] ${text}`;
+      logBox.prepend(line);
+      while (logBox.children.length > 9) {
+        logBox.removeChild(logBox.lastChild);
+      }
+    }
+
+    function saveState(showLog = true) {
+      if (gameOver) return;
+      state.lastSaved = Date.now();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+      if (showLog) addLog("セーブしました。（ＧＯＲＯ商事ライフを保存）");
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (!saved) return;
+      try {
+        const obj = JSON.parse(saved);
+        state = { ...state, ...obj };
+        addLog("セーブデータを読み込みました。");
+      } catch (e) {
+        console.error(e);
+        addLog("セーブデータの読み込みに失敗しました。");
+      }
+    }
+
+    function updateStageAndSalary() {
+      const y = state.year;
+      let cls = "stage-junior";
+      let label = "新入社員";
+      let salaryBase = 25;
+      let livingCost = 18;
+
+      if (y >= 1 && y < 3) {
+        cls = "stage-mid";
+        label = "中堅社員";
+        salaryBase = 32;
+        livingCost = 20;
+      } else if (y >= 3 && y < 6) {
+        cls = "stage-leader";
+        label = "リーダー";
+        salaryBase = 40;
+        livingCost = 22;
+      } else if (y >= 6) {
+        cls = "stage-manager";
+        label = "管理職";
+        salaryBase = 55;
+        livingCost = 26;
+      }
+
+      avatarBg.classList.remove(
+        "stage-junior",
+        "stage-mid",
+        "stage-leader",
+        "stage-manager"
+      );
+      avatarBg.classList.add(cls);
+      stagePill.textContent = label;
+
+      // 職位に応じて基本給・生活費を調整（転職・出向で変えることもあるので下限として上書き）
+      state.salaryBase = Math.max(state.salaryBase, salaryBase);
+      state.livingCost = Math.max(state.livingCost, livingCost);
+    }
+
+    function updateFace() {
+      const avg = (state.energy + state.mental + state.performance) / 3;
+      eyeLeft.classList.remove("happy", "tired");
+      eyeRight.classList.remove("happy", "tired");
+      mouth.classList.remove("smile", "sad", "neutral");
+
+      let moodText = "ふつう";
+
+      if (avg >= 85) {
+        moodText = "最高にノっている！";
+        eyeLeft.classList.add("happy");
+        eyeRight.classList.add("happy");
+        mouth.classList.add("smile");
+      } else if (avg >= 65) {
+        moodText = "調子は悪くない。";
+        mouth.classList.add("neutral");
+      } else if (avg >= 45) {
+        moodText = "少しお疲れ気味…";
+        eyeLeft.classList.add("tired");
+        eyeRight.classList.add("tired");
+        mouth.classList.add("neutral");
+      } else {
+        moodText = "限界に近い…休ませてあげて。";
+        eyeLeft.classList.add("tired");
+        eyeRight.classList.add("tired");
+        mouth.classList.add("sad");
+      }
+
+      moodLabel.textContent = `気分：${moodText}`;
+    }
+
+    function updateMoneyUI() {
+      moneyText.textContent = `¥${state.money.toFixed(1)}万`;
+      companyNameEl.textContent = state.companyName;
+    }
+
+    function updateStatsUI() {
+      energyBar.style.width = `${state.energy}%`;
+      mentalBar.style.width = `${state.mental}%`;
+      performanceBar.style.width = `${state.performance}%`;
+
+      energyVal.textContent = Math.round(state.energy);
+      mentalVal.textContent = Math.round(state.mental);
+      performanceVal.textContent = Math.round(state.performance);
+
+      yearText.textContent = `入社 ${state.year.toFixed(1)} 年目`;
+
+      updateStageAndSalary();
+      updateFace();
+      updateMoneyUI();
+    }
+
+    function bumpAvatar() {
+      avatarBg.style.transform = "translateY(-4px)";
+      setTimeout(() => {
+        avatarBg.style.transform = "translateY(0)";
+      }, 150);
+    }
+
+    // Ending
+    function triggerEnding(type) {
+      if (gameOver) return;
+      gameOver = true;
+
+      if (tickTimer) clearInterval(tickTimer);
+      if (autoSaveTimer) clearInterval(autoSaveTimer);
+
+      btnWork.disabled = true;
+      btnBreak.disabled = true;
+      btnStudy.disabled = true;
+      btnOvertime.disabled = true;
+      btnTransfer.disabled = true;
+      btnHeadhunt.disabled = true;
+      btnDispatch.disabled = true;
+      btnSave.disabled = true;
+
+      let tag = "ENDING";
+      let title = "";
+      let sub = "";
+      let body = "";
+
+      switch (type) {
+        case "mental":
+          tag = "鬱憤爆発 END";
+          title = "心が折れてしまった…";
+          sub = "メンタルが限界を超えたようです。";
+          body =
+            "長時間の残業とプレッシャーにより、山田さんのメンタルはほぼゼロに。\n\n「もう無理だ」と会社に退職届を出しました。\n\n新しい人生が、ここから始まるかもしれません。";
+          break;
+        case "fired":
+          tag = "退社 END";
+          title = "クビになってしまった。";
+          sub = "評価があまりに低くなってしまった…。";
+          body =
+            "仕事の評価が下がり続け、ついに上司から「これ以上は厳しい」と告げられました。\n\n山田さんは、悔しさとスッキリした気持ちを抱えながら会社を後にしました。";
+          break;
+        case "body":
+          tag = "身体ガタガタ END";
+          title = "体が動かなくなった。";
+          sub = "体力が尽きてしまった。";
+          body =
+            "休憩もほとんど取らず、残業・休日出勤を繰り返した結果、山田さんはついに倒れてしまいました。\n\n医者からは「しばらく休職が必要です」と宣告されます。";
+          break;
+        case "shachiku":
+          tag = "限界社畜 END";
+          title = "気づいたら社畜の完成形。";
+          sub = "体力もメンタルもギリギリのまま働き続けた結果…。";
+          body =
+            "朝から終電まで働き、休日も家で資料作り。\n\n自分のためのお金も時間もないまま、ただ評価のために走り続けた結果、山田さんは「何のために生きているのか」わからなくなってしまいました。";
+          break;
+        default:
+          tag = "ENDING";
+          title = "ＧＯＲＯ商事での物語が終わる。";
+          sub = "おつかれさまでした。";
+          body = "山田さんの社会人ライフは、ここでひと区切りを迎えました。";
+          break;
+      }
+
+      endingTag.textContent = tag;
+      endingTitle.textContent = title;
+      endingSub.textContent = sub;
+      endingBody.textContent = body.replace(/\n/g, "\n");
+      endingBackdrop.classList.add("show");
+
+      addLog(`【${tag}】ゲーム終了。`);
+      saveState(false);
+    }
+
+    function checkEnding() {
+      if (gameOver) return;
+      if (state.mental <= 5) {
+        triggerEnding("mental");
+      } else if (state.performance <= 5) {
+        triggerEnding("fired");
+      } else if (state.energy <= 5) {
+        triggerEnding("body");
+      } else if (state.energy < 15 && state.mental < 20 && state.year > 1.0) {
+        triggerEnding("shachiku");
+      }
+    }
+
+    // Action functions
+    function doWork() {
+      if (gameOver) return;
+      state.energy = clamp(state.energy - 8, 0, 100);
+      state.mental = clamp(state.mental - 4, 0, 100);
+      state.performance = clamp(state.performance + 6, 0, 100);
+      addLog("集中して仕事をした。評価は上がるが、少し疲れた。");
+      bumpAvatar();
+      updateStatsUI();
+      saveState(false);
+      checkEnding();
+    }
+
+    function doBreak() {
+      if (gameOver) return;
+      state.energy = clamp(state.energy + 10, 0, 100);
+      state.mental = clamp(state.mental + 12, 0, 100);
+      state.performance = clamp(state.performance - 2, 0, 100);
+      addLog("コーヒー休憩。体力とメンタルが回復した。評価は少しだけダウン。");
+      bumpAvatar();
+      updateStatsUI();
+      saveState(false);
+      checkEnding();
+    }
+
+    function doStudy() {
+      if (gameOver) return;
+      state.energy = clamp(state.energy - 5, 0, 100);
+      state.mental = clamp(state.mental - 2, 0, 100);
+      state.performance = clamp(state.performance + 4, 0, 100);
+      addLog("業務後に自己研修。じわじわ評価アップ。");
+      bumpAvatar();
+      updateStatsUI();
+      saveState(false);
+      checkEnding();
+    }
+
+    function doOvertime() {
+      if (gameOver) return;
+      state.energy = clamp(state.energy - 15, 0, 100);
+      state.mental = clamp(state.mental - 12, 0, 100);
+      state.performance = clamp(state.performance + 10, 0, 100);
+      addLog("深夜まで残業…。大きく評価アップだが、メンタルと体力が危険。");
+      bumpAvatar();
+      updateStatsUI();
+      saveState(false);
+      checkEnding();
+    }
+
+    // Career actions
+    function doTransfer() {
+      if (gameOver) return;
+      state.companyName = "ＧＯＲＯキャリアパートナーズ";
+      state.energy = clamp(state.energy + 5, 0, 100);
+      state.mental = clamp(state.mental + 10, 0, 100);
+      state.performance = clamp(state.performance - 8, 0, 100);
+      state.salaryBase = state.salaryBase + 5;
+      state.livingCost = state.livingCost + 3;
+      addLog("転職した！環境は変わったが、また一から信頼を積み上げる必要がある。");
+      bumpAvatar();
+      updateStatsUI();
+      saveState(false);
+      checkEnding();
+    }
+
+    function doHeadhunt() {
+      if (gameOver) return;
+      if (state.performance < 70) {
+        addLog("ヘッドハンティングの話は来ていない…（評価がまだ足りないようだ）。");
+        return;
+      }
+      state.companyName = "ＧＯＲＯグローバルホールディングス";
+      state.energy = clamp(state.energy - 5, 0, 100);
+      state.mental = clamp(state.mental + 5, 0, 100);
+      state.salaryBase = state.salaryBase + 12;
+      state.livingCost = state.livingCost + 6;
+      state.money += 15; // サインボーナス
+      addLog("ヘッドハンティングで年収アップ！サインボーナスももらった。責任はさらに重くなった。");
+      bumpAvatar();
+      updateStatsUI();
+      saveState(false);
+      checkEnding();
+    }
+
+    function doDispatch() {
+      if (gameOver) return;
+      state.companyName = "ＧＯＲＯ商事 日本分社";
+      state.energy = clamp(state.energy - 3, 0, 100);
+      state.mental = clamp(state.mental - 1, 0, 100);
+      state.performance = clamp(state.performance + 4, 0, 100);
+      state.salaryBase = state.salaryBase + 4;
+      state.livingCost = state.livingCost + 4;
+      state.money += 5; // 出向手当
+      addLog("日本分社へ出向。出向手当で少し収入アップ。環境も仕事内容も変化した。");
+      bumpAvatar();
+      updateStatsUI();
+      saveState(false);
+      checkEnding();
+    }
+
+    // Salary system
+    function doPayroll() {
+      // 0.1年ごとに呼ばれる想定
+      const base = state.salaryBase;
+      const perfBonus =
+        state.performance > 50
+          ? Math.max(0, Math.round((state.performance - 50) * state.bonusRate) / 10)
+          : 0;
+      const bonus = Math.round(perfBonus * 10) / 10; // 小数1位
+      const cost = state.livingCost;
+
+      const net = base + bonus - cost;
+      state.money = Math.round((state.money + net) * 10) / 10;
+
+      addLog(
+        `給料日：基本給 ${base.toFixed(1)}万 + ボーナス ${bonus.toFixed(
+          1
+        )}万 - 生活費 ${cost.toFixed(1)}万 = 手取り ${net.toFixed(1)}万`
+      );
+      updateMoneyUI();
+    }
+
+    // Tick
+    function tick() {
+      if (gameOver) return;
+
+      state.year += 0.02; // 約5秒で0.02年（0.1年=約25秒）
+      state.payrollProgress += 0.02;
+
+      // 自然減
+      state.energy = clamp(state.energy - 1.4, 0, 100);
+
+      if (state.energy < 40) {
+        state.mental = clamp(state.mental - 1.3, 0, 100);
+      } else if (state.energy < 60) {
+        state.mental = clamp(state.mental - 0.6, 0, 100);
+      } else {
+        state.mental = clamp(state.mental + 0.2, 0, 100);
+      }
+
+      if (state.mental >= 70 && state.energy >= 60) {
+        state.performance = clamp(state.performance + 0.6, 0, 100);
+      } else if (state.mental < 35) {
+        state.performance = clamp(state.performance - 0.6, 0, 100);
+      }
+
+      if (state.payrollProgress >= 0.1) {
+        state.payrollProgress -= 0.1;
+        doPayroll();
+      }
+
+      updateStatsUI();
+      checkEnding();
+    }
+
+    function autoSaveTick() {
+      if (!gameOver) saveState(false);
+    }
+
+    function resetGame() {
+      if (!confirm("本当にリセットしますか？（セーブデータも消えます）")) return;
+      localStorage.removeItem(SAVE_KEY);
+      state = {
+        energy: 80,
+        mental: 80,
+        performance: 70,
+        year: 0,
+        money: 50,
+        salaryBase: 25,
+        livingCost: 18,
+        bonusRate: 0.3,
+        companyName: "ＧＯＲＯ商事",
+        payrollProgress: 0,
+        lastSaved: Date.now()
+      };
+      gameOver = false;
+      endingBackdrop.classList.remove("show");
+
+      btnWork.disabled = false;
+      btnBreak.disabled = false;
+      btnStudy.disabled = false;
+      btnOvertime.disabled = false;
+      btnTransfer.disabled = false;
+      btnHeadhunt.disabled = false;
+      btnDispatch.disabled = false;
+      btnSave.disabled = false;
+
+      addLog("ゲームをリセットしました。新入社員から再スタート！");
+      updateStatsUI();
+
+      if (tickTimer) clearInterval(tickTimer);
+      if (autoSaveTimer) clearInterval(autoSaveTimer);
+      tickTimer = setInterval(tick, 5000);
+      autoSaveTimer = setInterval(autoSaveTick, 30000);
+      saveState(false);
+    }
+
+    function init() {
+      loadState();
+      updateStatsUI();
+
+      btnWork.addEventListener("click", doWork);
+      btnBreak.addEventListener("click", doBreak);
+      btnStudy.addEventListener("click", doStudy);
+      btnOvertime.addEventListener("click", doOvertime);
+      btnTransfer.addEventListener("click", doTransfer);
+      btnHeadhunt.addEventListener("click", doHeadhunt);
+      btnDispatch.addEventListener("click", doDispatch);
+      btnSave.addEventListener("click", () => saveState(true));
+      btnReset.addEventListener("click", resetGame);
+
+      endingRestart.addEventListener("click", resetGame);
+
+      tickTimer = setInterval(tick, 5000);        // 5秒ごとに状態変化
+      autoSaveTimer = setInterval(autoSaveTick, 30000); // 30秒ごとに自動セーブ
+
+      addLog("山田さんがＧＯＲＯ商事に入社しました。うまく育ててあげましょう。");
+    }
+
+    init();
+  </script>
+</body>
+</html>
