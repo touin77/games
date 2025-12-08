@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ひよこ育成ゲーム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #fef6e4, #fce0c2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .game {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      padding: 24px 20px 18px;
+      width: 360px;
+      max-width: 95vw;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    .pet-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .chick {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    /* 顏色代表成長階段 */
+    .stage-egg {
+      background: #f5f5f5;
+      border: 4px dashed #bbbbbb;
+    }
+    .stage-baby {
+      background: #ffe066;
+      border: 4px solid #ffca3a;
+    }
+    .stage-teen {
+      background: #ffd166;
+      border: 4px solid #f3722c;
+    }
+    .stage-adult {
+      background: #f9c74f;
+      border: 4px solid #f9844a;
+    }
+
+    /* 臉 */
+    .face {
+      width: 70%;
+      height: 70%;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .eye {
+      width: 12px;
+      height: 12px;
+      background: #333;
+      border-radius: 50%;
+      position: absolute;
+      top: 35%;
+    }
+
+    .eye.left {
+      left: 24%;
+    }
+    .eye.right {
+      right: 24%;
+    }
+
+    .eye.happy::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 8px;
+      border-radius: 50%;
+      border-bottom: 3px solid #333;
+      top: 2px;
+      background: transparent;
+    }
+
+    .beak {
+      width: 18px;
+      height: 14px;
+      background: #f8961e;
+      border-radius: 0 0 10px 10px;
+      position: absolute;
+      left: 50%;
+      top: 52%;
+      transform: translateX(-50%);
+    }
+
+    .beak.smile::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 8px;
+      border-radius: 0 0 12px 12px;
+      border-bottom: 3px solid #c15c10;
+      bottom: -2px;
+      left: 0;
+      background: transparent;
+    }
+
+    .beak.sad::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 8px;
+      border-radius: 12px 12px 0 0;
+      border-top: 3px solid #c15c10;
+      top: -6px;
+      left: 0;
+      background: transparent;
+    }
+
+    .status-text {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #555;
+      text-align: center;
+    }
+
+    .stats {
+      margin-bottom: 10px;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .stat span.label {
+      width: 70px;
+    }
+
+    .bar {
+      flex: 1;
+      height: 10px;
+      background: #eee;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 0 6px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 50%;
+      background: linear-gradient(90deg, #ffbe0b, #fb5607);
+      transition: width 0.25s ease;
+    }
+
+    .stat span.value {
+      width: 36px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .age {
+      font-size: 13px;
+      text-align: right;
+      margin-bottom: 8px;
+      color: #444;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    button.action {
+      padding: 8px 6px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      background: #ffcf6b;
+      box-shadow: 0 3px 0 #e09d2e;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.2s;
+    }
+
+    button.action:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #e09d2e;
+    }
+
+    button.action:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .save-controls button {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
+    .save-controls button:active {
+      transform: translateY(1px);
+    }
+
+    .hint {
+      font-size: 10px;
+      color: #777;
+      text-align: right;
+    }
+
+    .log {
+      margin-top: 6px;
+      font-size: 11px;
+      background: #fff8e6;
+      border-radius: 10px;
+      padding: 6px 8px;
+      max-height: 72px;
+      overflow-y: auto;
+    }
+
+    .log-line {
+      margin: 0;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <h1>ひよこ育成ゲーム</h1>
+
+    <div class="pet-area">
+      <div id="chick" class="chick stage-egg">
+        <div class="face" id="face">
+          <div class="eye left" id="eye-left"></div>
+          <div class="eye right" id="eye-right"></div>
+          <div class="beak" id="beak"></div>
+        </div>
+      </div>
+      <div class="status-text" id="stage-label">たまご</div>
+      <div class="status-text" id="mood-label">気分：ふつう</div>
+    </div>
+
+    <div class="age">
+      年齢：<span id="age-text">0 日</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="label">おなか</span>
+        <div class="bar">
+          <div class="bar-fill" id="hunger-bar"></div>
+        </div>
+        <span class="value" id="hunger-value">100</span>
+      </div>
+      <div class="stat">
+        <span class="label">きれいさ</span>
+        <div class="bar">
+          <div class="bar-fill" id="clean-bar"></div>
+        </div>
+        <span class="value" id="clean-value">100</span>
+      </div>
+      <div class="stat">
+        <span class="label">きげん</span>
+        <div class="bar">
+          <div class="bar-fill" id="mood-bar"></div>
+        </div>
+        <span class="value" id="mood-value">100</span>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="action" id="feed-btn">🍚 ごはん</button>
+      <button class="action" id="wash-btn">🛁 シャワー</button>
+      <button class="action" id="play-btn">🎀 あそぶ</button>
+      <button class="action" id="sleep-btn">💤 ねかせる</button>
+    </div>
+
+    <div class="bottom-row">
+      <div class="save-controls">
+        <button id="save-btn">💾 セーブ</button>
+        <button id="reset-btn">🗑 リセット</button>
+      </div>
+      <div class="hint">※30秒ごとに自動セーブ</div>
+    </div>
+
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    // ====== ゲーム状態 ======
+    const SAVE_KEY = "ok_chick_game_v1";
+
+    let state = {
+      hunger: 80,        // 0～100（高いほどお腹いっぱい）
+      cleanliness: 80,   // 0～100（高いほどきれい）
+      mood: 80,          // 0～100（高いほどごきげん）
+      ageMinutes: 0,     // 分で管理（1分=1日みたいなイメージ）
+      stage: "egg",      // egg / baby / teen / adult
+      lastSaved: Date.now()
+    };
+
+    // ====== DOM 取得 ======
+    const hungerBar = document.getElementById("hunger-bar");
+    const cleanBar = document.getElementById("clean-bar");
+    const moodBar = document.getElementById("mood-bar");
+    const hungerVal = document.getElementById("hunger-value");
+    const cleanVal = document.getElementById("clean-value");
+    const moodVal = document.getElementById("mood-value");
+    const ageText = document.getElementById("age-text");
+    const stageLabel = document.getElementById("stage-label");
+    const moodLabel = document.getElementById("mood-label");
+    const chick = document.getElementById("chick");
+    const eyeLeft = document.getElementById("eye-left");
+    const eyeRight = document.getElementById("eye-right");
+    const beak = document.getElementById("beak");
+    const logBox = document.getElementById("log");
+
+    const btnFeed = document.getElementById("feed-btn");
+    const btnWash = document.getElementById("wash-btn");
+    const btnPlay = document.getElementById("play-btn");
+    const btnSleep = document.getElementById("sleep-btn");
+    const btnSave = document.getElementById("save-btn");
+    const btnReset = document.getElementById("reset-btn");
+
+    // ====== ユーティリティ ======
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function addLog(text) {
+      const line = document.createElement("p");
+      line.className = "log-line";
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      line.textContent = `[${hh}:${mm}] ${text}`;
+      logBox.prepend(line);
+
+      // 最大行数を制限
+      while (logBox.children.length > 8) {
+        logBox.removeChild(logBox.lastChild);
+      }
+    }
+
+    // ====== セーブ / ロード ======
+    function saveState(showLog = true) {
+      state.lastSaved = Date.now();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+      if (showLog) addLog("ゲームをセーブしました。");
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (!saved) return;
+      try {
+        const obj = JSON.parse(saved);
+        state = {
+          ...state,
+          ...obj
+        };
+        addLog("セーブデータを読み込みました。");
+      } catch (e) {
+        console.error(e);
+        addLog("セーブデータの読み込みに失敗しました。");
+      }
+    }
+
+    // ====== 見た目更新 ======
+    function updateStage() {
+      const age = state.ageMinutes;
+
+      let stage = "egg";
+      if (age >= 1 && age < 5) stage = "baby";
+      else if (age >= 5 && age < 15) stage = "teen";
+      else if (age >= 15) stage = "adult";
+
+      state.stage = stage;
+
+      chick.classList.remove("stage-egg", "stage-baby", "stage-teen", "stage-adult");
+      chick.classList.add(`stage-${stage}`);
+
+      switch (stage) {
+        case "egg":
+          stageLabel.textContent = "たまご";
+          break;
+        case "baby":
+          stageLabel.textContent = "ひよこ";
+          break;
+        case "teen":
+          stageLabel.textContent = "わかどり";
+          break;
+        case "adult":
+          stageLabel.textContent = "おとなニワトリ";
+          break;
+      }
+    }
+
+    function updateMoodFace() {
+      // 全体状態から気分テキスト
+      const avg = (state.hunger + state.cleanliness + state.mood) / 3;
+      let text = "ふつう";
+      if (avg >= 80) text = "とってもごきげん！";
+      else if (avg >= 60) text = "ごきげん";
+      else if (avg >= 40) text = "ちょっと不機嫌…";
+      else text = "かなりご機嫌ナナメ…";
+
+      moodLabel.textContent = `気分：${text}`;
+
+      // 顔
+      const eyeHappy = avg >= 70;
+      const beakHappy = avg >= 60;
+      const beakSad = avg <= 40;
+
+      eyeLeft.classList.toggle("happy", eyeHappy);
+      eyeRight.classList.toggle("happy", eyeHappy);
+
+      beak.classList.toggle("smile", beakHappy);
+      beak.classList.toggle("sad", beakSad);
+    }
+
+    function updateStatsUI() {
+      hungerBar.style.width = `${state.hunger}%`;
+      cleanBar.style.width = `${state.cleanliness}%`;
+      moodBar.style.width = `${state.mood}%`;
+
+      hungerVal.textContent = Math.round(state.hunger);
+      cleanVal.textContent = Math.round(state.cleanliness);
+      moodVal.textContent = Math.round(state.mood);
+
+      const days = state.ageMinutes.toFixed(1);
+      ageText.textContent = `${days} 日`;
+
+      updateStage();
+      updateMoodFace();
+    }
+
+    // ====== 行動 ======
+    function doFeed() {
+      state.hunger = clamp(state.hunger + 25, 0, 100);
+      state.mood = clamp(state.mood + 5, 0, 100);
+      addLog("ごはんをあげた。おなかいっぱいでうれしそう！");
+      smallBounce();
+      updateStatsUI();
+      saveState(false);
+    }
+
+    function doWash() {
+      state.cleanliness = clamp(state.cleanliness + 30, 0, 100);
+      state.mood = clamp(state.mood + 3, 0, 100);
+      addLog("シャワーできれいになった！");
+      smallBounce();
+      updateStatsUI();
+      saveState(false);
+    }
+
+    function doPlay() {
+      state.mood = clamp(state.mood + 20, 0, 100);
+      state.hunger = clamp(state.hunger - 5, 0, 100);
+      state.cleanliness = clamp(state.cleanliness - 5, 0, 100);
+      addLog("一緒にあそんで、ごきげんアップ！");
+      smallBounce();
+      updateStatsUI();
+      saveState(false);
+    }
+
+    function doSleep() {
+      state.mood = clamp(state.mood + 8, 0, 100);
+      state.hunger = clamp(state.hunger - 5, 0, 100);
+      addLog("少しお昼寝。すこし元気になった。");
+      smallBounce();
+      updateStatsUI();
+      saveState(false);
+    }
+
+    function smallBounce() {
+      chick.style.transform = "translateY(-6px)";
+      setTimeout(() => {
+        chick.style.transform = "translateY(0)";
+      }, 150);
+    }
+
+    // ====== 経過時間で自動変化 ======
+    function tick() {
+      // 5秒ごとにちょっとずつ減る
+      state.ageMinutes += 0.1;              // 約1分で1日成長
+      state.hunger = clamp(state.hunger - 1.2, 0, 100);
+      state.cleanliness = clamp(state.cleanliness - 0.6, 0, 100);
+
+      // お腹ペコペコ or 汚いと機嫌ダウン
+      if (state.hunger < 40 || state.cleanliness < 40) {
+        state.mood = clamp(state.mood - 1.1, 0, 100);
+      } else {
+        state.mood = clamp(state.mood + 0.2, 0, 100); // 条件良ければ少し回復
+      }
+
+      updateStatsUI();
+    }
+
+    function autoSaveTick() {
+      saveState(false);
+    }
+
+    // ====== リセット ======
+    function resetGame() {
+      if (!confirm("本当にリセットしますか？（セーブデータも消えます）")) return;
+      localStorage.removeItem(SAVE_KEY);
+      state = {
+        hunger: 80,
+        cleanliness: 80,
+        mood: 80,
+        ageMinutes: 0,
+        stage: "egg",
+        lastSaved: Date.now()
+      };
+      addLog("ゲームをリセットしました。");
+      updateStatsUI();
+      saveState(false);
+    }
+
+    // ====== 初期化 ======
+    function init() {
+      loadState();
+      updateStatsUI();
+
+      btnFeed.addEventListener("click", doFeed);
+      btnWash.addEventListener("click", doWash);
+      btnPlay.addEventListener("click", doPlay);
+      btnSleep.addEventListener("click", doSleep);
+      btnSave.addEventListener("click", () => saveState(true));
+      btnReset.addEventListener("click", resetGame);
+
+      // 5秒ごとに状態変化
+      setInterval(tick, 5000);
+      // 30秒ごとに自動セーブ
+      setInterval(autoSaveTick, 30000);
+
+      addLog("ひよこが生まれました。お世話してあげましょう！");
+    }
+
+    init();
+  </script>
+</body>
+</html>
