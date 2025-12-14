@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>クラゲ育成水槽</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: "Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;
+  color: rgba(255,255,255,0.9);
+}
+
+/* ===== 星空背景（静的） ===== */
+.aquarium {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(1200px 600px at 50% 30%, rgba(60,80,140,0.35), rgba(0,0,0,0.95)),
+    radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 25% 70%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 40% 40%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.5px 1.5px at 55% 15%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 70% 60%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(2px 2px at 85% 30%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.4), transparent);
+  overflow: hidden;
+}
+
+/* ===== クラゲ（変更なし） ===== */
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.jellyfish {
+  width: 360px;
+  opacity: 0.95;
+  animation: floatY 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes floatY {
+  0%   { transform: translateY(0) scale(var(--s,1)); }
+  50%  { transform: translateY(-40px) scale(var(--s,1)); }
+  100% { transform: translateY(0) scale(var(--s,1)); }
+}
+
+/* ===== 操作UI（変更なし） ===== */
+.controls {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+button {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 12px;
+  cursor: pointer;
+}
+button:active { transform: translateY(1px); }
+
+/* ===== メッセージ ===== */
+.notice {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 8px 12px;
+  backdrop-filter: blur(6px);
+}
+
+/* ===== 結局 ===== */
+.ending {
+  position: absolute;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(8px);
+}
+.ending.show { display: flex; }
+
+.ending p {
+  font-size: 18px;
+  line-height: 1.6;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+<div class="aquarium">
+
+  <div class="center">
+    <img
+      id="jelly"
+      class="jellyfish"
+      src="https://raw.githubusercontent.com/touin77/games/main/51271927-9336-4999-ac1b-2d9d22693f40.png"
+      alt="クラゲ">
+  </div>
+
+  <div class="controls">
+    <button onclick="feed()">えさを与える</button>
+    <button onclick="water()">水槽の水を変える</button>
+    <button onclick="poke()">つつく</button>
+  </div>
+
+  <div class="notice" id="notice">静かに漂っています。</div>
+
+  <div class="ending" id="ending">
+    <p>育ててくれてありがとう。<br>旅にでるね</p>
+  </div>
+
+</div>
+
+<script>
+/* ===== セーブ設定（変更なし） ===== */
+const SAVE_KEY = "KURAGE_AQUARIUM_SAVE";
+const DAY_MS = 86400000;
+const TOTAL_DAYS = 7;
+
+const jelly = document.getElementById("jelly");
+const notice = document.getElementById("notice");
+const ending = document.getElementById("ending");
+
+function newData(){
+  return {
+    startAt: Date.now(),
+    mood: 50,
+    ended: false
+  };
+}
+
+let data = JSON.parse(localStorage.getItem(SAVE_KEY)) || newData();
+
+function save(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+}
+
+function progress(){
+  return Math.min(1, (Date.now() - data.startAt) / (TOTAL_DAYS * DAY_MS));
+}
+
+function applyGrowth(){
+  const scale = 1 + progress() * 0.25;
+  jelly.style.setProperty("--s", scale.toFixed(3));
+}
+
+/* ===== 行動（変更なし） ===== */
+function say(text){
+  notice.textContent = text;
+}
+
+function feed(){
+  data.mood = Math.min(100, data.mood + 10);
+  say("クラゲはゆっくり反応している。");
+  save();
+}
+
+function water(){
+  data.mood = Math.min(100, data.mood + 15);
+  say("環境が整えられた。");
+  save();
+}
+
+function poke(){
+  jelly.animate(
+    [
+      { transform: "translateY(0) scale(var(--s,1))" },
+      { transform: "translateY(-6px) scale(var(--s,1))" },
+      { transform: "translateY(0) scale(var(--s,1))" }
+    ],
+    { duration: 300, easing: "ease-out" }
+  );
+  data.mood = Math.max(0, data.mood - 5);
+  say("クラゲがわずかに揺れた。");
+  save();
+}
+
+/* ===== 定期更新（変更なし） ===== */
+function tick(){
+  if (data.ended) return;
+
+  applyGrowth();
+
+  if (progress() >= 1){
+    data.ended = true;
+    save();
+    ending.classList.add("show");
+  }
+}
+
+applyGrowth();
+tick();
+setInterval(tick, 10000);
+window.addEventListener("beforeunload", save);
+</script>
+</body>
+</html>
+
