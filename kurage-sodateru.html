@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>クラゲ水族館</title>
+
+<style>
+html,body{
+  margin:0;
+  height:100%;
+  background:#000;
+}
+
+#shell{
+  width:100vw;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+}
+
+#game{
+  position:relative;
+  width:100%;
+  max-width:420px;
+  height:100vh;
+  overflow:hidden;
+  background:#000;
+}
+
+/* 背景 */
+#bg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
+  pointer-events:none;
+}
+
+/* 水流 */
+#flow{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:
+    radial-gradient(circle at 50% 30%,
+      rgba(255,255,255,.06),
+      transparent 60%);
+  opacity:.15;
+  animation: waterFlow 22s linear infinite;
+  pointer-events:none;
+}
+@keyframes waterFlow{
+  from{ background-position:0 0; }
+  to{ background-position:0 -220px; }
+}
+
+/* クラゲ */
+.jelly{
+  position:absolute;
+  pointer-events:none;
+  opacity:.95;
+  z-index:2;
+  filter:drop-shadow(0 6px 8px rgba(0,0,0,.25));
+}
+.jelly.a{
+  animation: floatA 7.5s ease-in-out infinite,
+             pulseA 6.5s ease-in-out infinite;
+}
+.jelly.b{
+  animation: floatB 6.8s ease-in-out infinite,
+             pulseB 5.8s ease-in-out infinite;
+}
+@keyframes floatA{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-18px); }
+}
+@keyframes floatB{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-22px); }
+}
+@keyframes pulseA{
+  0%{ transform:scale(1,1); }
+  45%{ transform:scale(0.96,1.04); }
+  65%{ transform:scale(1.05,0.95); }
+  100%{ transform:scale(1,1); }
+}
+@keyframes pulseB{
+  0%{ transform:scale(1,1); }
+  40%{ transform:scale(0.95,1.07); }
+  60%{ transform:scale(1.07,0.93); }
+  100%{ transform:scale(1,1); }
+}
+
+/* 🫧 気泡 */
+.bubble{
+  position:absolute;
+  bottom:0;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.5);
+  opacity:.6;
+  z-index:1;
+  animation: bubbleUp linear forwards;
+}
+@keyframes bubbleUp{
+  0%{
+    transform:translateX(0) translateY(0);
+    opacity:.6;
+  }
+  100%{
+    transform:
+      translateX(var(--drift))
+      translateY(-500px);
+    opacity:0;
+  }
+}
+
+/* モード切替 */
+#modeToggle{
+  position:absolute;
+  top:14px;
+  right:14px;
+  z-index:10;
+  padding:8px 14px;
+  border-radius:999px;
+  border:none;
+  background:rgba(0,0,0,.45);
+  color:#fff;
+  font-size:13px;
+  font-family: system-ui, -apple-system,
+               "Hiragino Kaku Gothic ProN",
+               "Noto Sans JP", sans-serif;
+  backdrop-filter: blur(6px);
+  cursor:pointer;
+}
+
+/* 夜間 */
+#game.night{
+  filter: brightness(0.6) saturate(1.25);
+}
+#game.night #flow{
+  opacity:0.35;
+}
+#game.night .jelly{
+  filter:
+    drop-shadow(0 0 12px rgba(140,200,255,.7))
+    drop-shadow(0 0 32px rgba(140,200,255,.45))
+    drop-shadow(0 0 64px rgba(140,200,255,.25));
+}
+</style>
+</head>
+
+<body>
+<div id="shell">
+  <div id="game">
+    <img id="bg">
+    <div id="flow"></div>
+    <button id="modeToggle">🌙 夜間モード</button>
+  </div>
+</div>
+
+<script>
+const toRaw = u =>
+  u.replace("github.com","raw.githubusercontent.com")
+   .replace("/blob/","/");
+
+const game = document.getElementById("game");
+const bg   = document.getElementById("bg");
+const btn  = document.getElementById("modeToggle");
+
+/* 背景 */
+bg.src = toRaw(
+  "https://github.com/touin77/games/blob/main/%E3%82%AC%E3%83%A9%E3%82%B9%E6%B0%B4%E6%A7%BD.png"
+);
+
+/* 水母素材 */
+const JELLY_A = toRaw(
+  "https://github.com/touin77/games/blob/main/%E3%82%80%E3%81%99%E3%81%8D%E3%81%AA%E3%82%AF%E3%83%A9%E3%82%B2.png"
+);
+const JELLY_B = toRaw(
+  "https://github.com/touin77/games/blob/main/%E3%82%AF%E3%83%A9%E3%82%B2%EF%BC%91.png"
+);
+
+/* 配置範囲 */
+const AREA = {
+  xMin:70, xMax:350,
+  yMin:140, yMax:420
+};
+const used=[];
+
+function place(min){
+  let x,y,t=0;
+  do{
+    x=AREA.xMin+Math.random()*(AREA.xMax-AREA.xMin);
+    y=AREA.yMin+Math.random()*(AREA.yMax-AREA.yMin);
+    t++;
+  }while(used.some(p=>Math.hypot(p.x-x,p.y-y)<min)&&t<120);
+  used.push({x,y});
+  return {x,y};
+}
+
+function createJelly(src,cls,min,max){
+  const p=place(90);
+  const j=document.createElement("img");
+  j.src=src;
+  j.className="jelly "+cls;
+  j.style.left=p.x+"px";
+  j.style.top=p.y+"px";
+  j.style.width=(Math.random()*(max-min)+min)+"px";
+  j.style.animationDelay=(-Math.random()*12)+"s,"+(-Math.random()*11)+"s";
+  game.appendChild(j);
+}
+
+/* 水母 14 */
+for(let i=0;i<7;i++) createJelly(JELLY_A,"a",60,70);
+for(let i=0;i<7;i++) createJelly(JELLY_B,"b",50,60);
+
+/* 🫧 気泡生成（砂から） */
+setInterval(()=>{
+  const b=document.createElement("div");
+  const size=Math.random()*4+3;
+  b.className="bubble";
+  b.style.width=size+"px";
+  b.style.height=size+"px";
+  b.style.left=(AREA.xMin+Math.random()*(AREA.xMax-AREA.xMin))+"px";
+  b.style.bottom="80px";   // 沙の上
+  b.style.setProperty("--drift",(Math.random()*40-20)+"px");
+  b.style.animationDuration=(5+Math.random()*3)+"s";
+  game.appendChild(b);
+  setTimeout(()=>b.remove(),9000);
+},700);
+
+/* 夜間記憶 */
+const KEY="jelly-night-mode";
+if(localStorage.getItem(KEY)==="night"){
+  game.classList.add("night");
+  btn.textContent="☀️ 昼モード";
+}
+btn.addEventListener("click",()=>{
+  const n=game.classList.toggle("night");
+  localStorage.setItem(KEY,n?"night":"day");
+  btn.textContent=n?"☀️ 昼モード":"🌙 夜間モード";
+});
+</script>
+</body>
+</html>
+
